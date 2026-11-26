@@ -1079,7 +1079,8 @@
   const todayIso = () => iso(new Date());
   const addDays = (t, n) => { const d = new Date(t + 'T00:00:00'); d.setDate(d.getDate() + n); return iso(d); };
   const T = n => addDays(todayIso(), n);
-  const butuh = o => o.jml * KEDELAI_PER_SATUAN;
+  const hitungKg = j => j > 0 ? Math.max(1, Math.round(j * KEDELAI_PER_SATUAN)) : 0; // dibulatkan ke kg
+  const butuh = o => hitungKg(o.jml);
   const harianOn = t => (state.rencana && state.rencana[t] != null) ? state.rencana[t] : state.harian;
   const mulaiOf = o => addDays(o.tanggal, -LEAD);
 
@@ -1186,7 +1187,7 @@ const alokasiSebelum = (M, ex) => {
   function updateCalculations() {
     const jml = parseFloat(document.getElementById('jml').value) || 0;
     const tglH = document.getElementById('tglH').value;
-    const butuh = jml * KEDELAI_PER_SATUAN;
+    const butuh = hitungKg(jml);
     document.getElementById('calcKedelai').textContent = fmt(butuh) + ' kg';
 
     if (tglH) {
@@ -1290,7 +1291,7 @@ const alokasiSebelum = (M, ex) => {
     if (editId) {
       const o = state.orders.find(x => x.id === editId);
       if (!o || !['Menunggu', 'Dijadwalkan'].includes(o.status)) { showToast('Pesanan ini sudah diproduksi, tidak bisa diubah.', true); return; }
-      if (o.status === 'Dijadwalkan' && alokasi() - butuh(o) + jml * KEDELAI_PER_SATUAN > state.now) { showToast('Stok tidak cukup untuk jumlah baru.', true); return; }
+      if (o.status === 'Dijadwalkan' && alokasi() - butuh(o) + hitungKg(jml) > state.now) { showToast('Stok tidak cukup untuk jumlah baru.', true); return; }
       Object.assign(o, { nama, jml, tanggal: tglH.value, alamat, mulai });
       showToast('Pesanan berhasil diperbarui!');
     } else {
@@ -1387,7 +1388,7 @@ const alokasiSebelum = (M, ex) => {
     const o = state.orders.find(x => x.id === id); if (!o) return;
     targetOrderIdToApprove = id;
     const c = cekPesanan(o), cukup = c.sisa >= 0, A = c.A;
-    const rentang = c.M > A.dari ? `${A.dari} s/d ${addDays(c.M, -1)}` : 'tidak ada';
+    const rentang = c.M > A.dari ? `${A.dari} s/d ${addDays(c.M, -1)}` : 'tidak ada hari tersisa';
     const st = cukup
       ? `<div style="margin-top:10px;padding:10px 14px;border-radius:12px;background:#D5EAD8;color:#2E6B38;">✔ <b>Layak stok.</b> Stok tersisa setelah persetujuan: <b>${fmt(c.sisa)} kg</b></div>`
       : `<div style="margin-top:10px;padding:10px 14px;border-radius:12px;background:#F8E3D9;color:#9A4B2B;">⚠️ <b>Stok kurang ${fmt(-c.sisa)} kg.</b> Pilih tindakan:
@@ -1396,6 +1397,8 @@ const alokasiSebelum = (M, ex) => {
           <button class="btn-act btn-edit" onclick="closeModals();editPesanan('${id}')">Jadwalkan ulang</button></div></div>`;
     pemOk.disabled = !cukup; pemOk.style.opacity = cukup ? '1' : '.5'; pemOk.style.cursor = cukup ? 'pointer' : 'not-allowed';
     const sub = 'style="font-size:13px;opacity:.85"';
+    const recH = state.penggunaan.find(x => x.rutin && x.tgl === todayIso());
+    const barisHariIni = recH && todayIso() < c.M ? `<div class="drow" ${sub}><span>• Produksi harian hari ini (${todayIso()}) sudah tercatat ✔ dan sudah mengurangi stok aktual</span><span>${fmt(recH.jml)} kg</span></div>` : '';
     pemeriksaanBody.innerHTML = `
       <div class="drow"><span>Pelanggan</span><span>${esc(o.nama)}</span></div>
       <div class="drow"><span>Total Kebutuhan Pesanan</span><span>${fmt(c.b)} kg</span></div>
@@ -1404,7 +1407,7 @@ const alokasiSebelum = (M, ex) => {
       <div class="drow"><span>Stok Aktual</span><span>${fmt(state.now)} kg</span></div>
       <div class="drow"><span>Sudah Dialokasikan sebelum ${c.M}</span><span>${fmt(A.total)} kg</span></div>
       <div class="drow" ${sub}><span>• Produksi harian (${rentang})</span><span>${fmt(A.rutin)} kg</span></div>
-      <div class="drow" ${sub}><span>• Pesanan terjadwal sebelumnya</span><span>${fmt(A.psn)} kg</span></div>
+      <div class="drow" ${sub}><span>• Pesanan terjadwal sebelumnya</span><span>${fmt(A.psn)} kg</span></div>${barisHariIni}
       <div class="drow"><span>Stok Tersedia pada ${c.M}</span><span>${fmt(c.bb)} kg</span></div>${st}`;
     pemeriksaanModal.classList.add('show');
   };
@@ -1645,7 +1648,7 @@ const alokasiSebelum = (M, ex) => {
   const odA = document.getElementById('odA');
 
   function openOrderModal(o) {
-    const butuhKedelai = o.jml * KEDELAI_PER_SATUAN;
+    const butuhKedelai = hitungKg(o.jml);
     odT.textContent = 'Detail Pesanan #' + o.id;
 
     let warnHtml = '';

@@ -10,7 +10,7 @@ class StokService {
     const LEAD = 3;          // hari sebelum tanggal permintaan
 
     static function persediaan(): Persediaan { return Persediaan::firstOrCreate(['id' => 1], ['stok_aktual' => 0, 'batas_minimum' => 100]); }
-    static function butuh(int $papan): float { return round($papan * self::PER_PAPAN, 2); }
+    static function butuh(int $papan): float { return (float) max(1, round($papan * self::PER_PAPAN)); } // dibulatkan ke kg
     static function alokasi(): float { return (float) Pesanan::where('status_pesanan', 'Dijadwalkan')->sum('kebutuhan_kedelai'); }
     static function bebas(): float { return (float) self::persediaan()->stok_aktual - self::alokasi(); }
     static function standar(): float { return (float) Setting::get('harian_standar', 65); }
