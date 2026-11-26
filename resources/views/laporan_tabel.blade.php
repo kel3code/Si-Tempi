@@ -1,0 +1,4 @@
+<table><tr>@foreach(['pesanan'=>['ID','Pelanggan','Papan','Kedelai (kg)','Tgl Permintaan','Status'],'penerimaan'=>['Tanggal','Sumber','Jumlah (kg)','Harga/kg','Status'],'penggunaan'=>['Tanggal','Untuk','Jumlah (kg)']][$jenis] as $h)<th>{{ $h }}</th>@endforeach</tr>
+@forelse($$jenis as $x)<tr>@if($jenis=='pesanan')<td>{{ $x->id }}</td><td>{{ $x->nama_pelanggan }}</td><td>{{ $x->jumlah_pesanan }}</td><td>{{ $x->kebutuhan_kedelai }}</td><td>{{ $x->tanggal_permintaan }}</td><td>{{ $x->status_pesanan }}</td>
+@elseif($jenis=='penerimaan')<td>{{ $x->tanggal_penerimaan }}</td><td>{{ $x->sumber_penerimaan }}</td><td>{{ $x->jumlah_kedelai }}</td><td>{{ $x->harga_per_kg }}</td><td>{{ $x->status_penerimaan }}</td>
+@else<td>{{ $x->tanggal_penggunaan }}</td><td>{{ $x->keterangan }}</td><td>{{ $x->jumlah_digunakan }}</td>@endif</tr>@empty<tr><td colspan="6">Tidak ada data pada periode ini.</td></tr>@endforelse</table>

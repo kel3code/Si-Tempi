@@ -1,0 +1,15 @@
+@extends('layouts.app')@section('isi')
+<div class="card"><h3>Tambah Pesanan</h3><form method="POST" action="{{ route('pesanan.simpan') }}" class="row">@csrf
+<label>Nama pelanggan<input name="nama_pelanggan" value="{{ old('nama_pelanggan') }}"></label><label>Jumlah (papan)<input name="jumlah_pesanan" type="number" value="{{ old('jumlah_pesanan') }}" id="j"></label>
+<label>Tanggal permintaan<input name="tanggal_permintaan" type="date" value="{{ old('tanggal_permintaan') }}" id="t"></label><label>Alamat<input name="alamat_pelanggan" value="{{ old('alamat_pelanggan') }}"></label>
+<label><input type="checkbox" name="tetap_simpan" value="1" style="width:auto"> tetap simpan jika tanggal terlalu dekat</label><button class="btn">Simpan Pesanan</button></form>
+<p id="hit" style="font-size:13px"></p></div>
+<div class="card"><form class="row" method="GET"><label>Cari<input name="cari" value="{{ request('cari') }}"></label><label>Status<select name="status"><option value="">Semua</option>@foreach(['Menunggu','Dijadwalkan','Diproduksi','Selesai'] as $s)<option {{ request('status')==$s?'selected':'' }}>{{ $s }}</option>@endforeach</select></label><button class="btn s">Filter</button></form></div>
+<div class="card tw"><table><tr><th>ID</th><th>Pelanggan</th><th>Papan</th><th>Kedelai</th><th>Permintaan</th><th>Mulai</th><th>Status</th><th>Aksi</th></tr>
+@foreach($list as $o)<tr><td>#{{ $o->id }}</td><td>{{ $o->nama_pelanggan }}</td><td>{{ $o->jumlah_pesanan }}</td><td>{{ $o->kebutuhan_kedelai }} kg</td><td>{{ $o->tanggal_permintaan }}</td><td>{{ $o->tanggal_mulai }}</td><td>{{ $o->status_pesanan }}</td><td style="white-space:nowrap">
+@if($o->status_pesanan=='Menunggu')<form method="POST" action="{{ route('pesanan.setujui',$o) }}" style="display:inline">@csrf<button class="btn">Setujui & Jadwalkan</button></form>@endif
+@if($o->status_pesanan=='Dijadwalkan')<form method="POST" action="{{ route('pesanan.mulai',$o) }}" style="display:inline">@csrf<input type="hidden" name="pakai" value="{{ $o->kebutuhan_kedelai }}"><button class="btn" {{ today()->toDateString() < $o->tanggal_mulai ? 'disabled title=Belum\ waktunya' : '' }}>{{ today()->toDateString() < $o->tanggal_mulai ? 'Mulai: '.$o->tanggal_mulai : 'Mulai Produksi' }}</button></form>@endif
+@if($o->status_pesanan=='Diproduksi')<form method="POST" action="{{ route('pesanan.selesai',$o) }}" style="display:inline">@csrf<button class="btn">Tandai Selesai</button></form>@endif
+@if(in_array($o->status_pesanan,['Menunggu','Dijadwalkan']))<form method="POST" action="{{ route('pesanan.hapus',$o) }}" style="display:inline" onsubmit="return confirm('Hapus pesanan ini?')">@csrf @method('DELETE')<button class="btn r">Tolak/Batal</button></form>@endif</td></tr>@endforeach</table></div>
+<script>const j=document.getElementById('j'),t=document.getElementById('t'),h=document.getElementById('hit');function u(){if(j.value&&t.value){const d=new Date(t.value+'T00:00:00');d.setDate(d.getDate()-3);h.textContent='Kebutuhan kedelai ±'+(j.value*0.6).toFixed(1)+' kg · mulai produksi '+d.toISOString().slice(0,10)}}j.oninput=t.oninput=u</script>
+@endsection

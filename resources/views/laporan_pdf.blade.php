@@ -1,0 +1,2 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:DejaVu Sans,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th{background:#E8EDD0}th,td{border-bottom:1px solid #ccc;padding:5px;text-align:left}</style></head><body>
+<h2>Laporan {{ ucfirst($jenis) }} – Si Tempi</h2><p>Periode {{ $a->toDateString() }} s/d {{ $z->toDateString() }} · Dicetak {{ today()->toDateString() }}</p>@include('laporan_tabel')</body></html>
